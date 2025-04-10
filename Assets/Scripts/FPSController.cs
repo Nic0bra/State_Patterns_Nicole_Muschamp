@@ -1,9 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
+using static UnityEngine.UI.Image;
 
 public class FPSController : MonoBehaviour
 {
+    //References
+    [SerializeField] PlayerHUD playerHUD;
     // references
     CharacterController controller;
     [SerializeField] GameObject cam;
@@ -28,11 +32,11 @@ public class FPSController : MonoBehaviour
 
     // properties
     public GameObject Cam { get { return cam; } }
-    
+
 
     private void Awake()
     {
-        
+
     }
 
     // Start is called before the first frame update
@@ -42,7 +46,7 @@ public class FPSController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
 
         // start with a gun
-        if(initialGun != null)
+        if (initialGun != null)
             AddGun(initialGun);
 
         origin = transform.position;
@@ -66,7 +70,7 @@ public class FPSController : MonoBehaviour
     {
         grounded = controller.isGrounded;
 
-        if(grounded && velocity.y < 0)
+        if (grounded && velocity.y < 0)
         {
             velocity.y = -1;// -0.5f;
         }
@@ -77,7 +81,7 @@ public class FPSController : MonoBehaviour
 
         if (Input.GetButtonDown("Jump") && grounded)
         {
-            velocity.y += Mathf.Sqrt (jumpForce * -1 * gravity);
+            velocity.y += Mathf.Sqrt(jumpForce * -1 * gravity);
         }
 
         velocity.y += gravity * Time.deltaTime;
@@ -104,7 +108,7 @@ public class FPSController : MonoBehaviour
         if (equippedGuns.Count == 0)
             return;
 
-        if(Input.GetAxis("Mouse ScrollWheel") > 0)
+        if (Input.GetAxis("Mouse ScrollWheel") > 0)
         {
             gunIndex++;
             if (gunIndex > equippedGuns.Count - 1)
@@ -130,13 +134,13 @@ public class FPSController : MonoBehaviour
             return;
 
         // pressed the fire button
-        if(GetPressFire())
+        if (GetPressFire())
         {
             currentGun?.AttemptFire();
         }
 
         // holding the fire button (for automatic)
-        else if(GetHoldFire())
+        else if (GetHoldFire())
         {
             if (currentGun.AttemptAutomaticFire())
                 currentGun?.AttemptFire();
@@ -219,12 +223,27 @@ public class FPSController : MonoBehaviour
     {
         return Input.GetButton("Sprint");
     }
+    
 
     // Collision methods
 
     // Character Controller can't use OnCollisionEnter :D thanks Unity
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
+        Damager damager = hit.gameObject.GetComponent<Damager>();
+        if (damager != null)
+        {
+            var collisionPoint = hit.collider.ClosestPoint(transform.position);
+            var knockbackAngle = (transform.position - collisionPoint).normalized;
+            velocity = (20 * knockbackAngle);
+
+            //Apply damage
+            if (playerHUD != null)
+            {
+                //Pass damage
+                playerHUD.TakeDamage(damager.damageAmount);
+            }
+        }
         if (hit.gameObject.GetComponent<Damager>())
         {
             var collisionPoint = hit.collider.ClosestPoint(transform.position);
@@ -232,11 +251,9 @@ public class FPSController : MonoBehaviour
             velocity = (20 * knockbackAngle);
         }
 
-        if (hit.gameObject.GetComponent <KillZone>())
+        if (hit.gameObject.GetComponent<KillZone>())
         {
             Respawn();
         }
     }
-
-
 }

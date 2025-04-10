@@ -14,7 +14,7 @@ public class Automatic : Gun
             return false;
 
         var b = Instantiate(bulletPrefab, gunBarrelEnd.transform.position, gunBarrelEnd.rotation);
-        b.GetComponent<Projectile>().Initialize(damage, velocity, life, force, Bleed); // version without special effect
+        b.GetComponent<Projectile>().Initialize(damage, velocity, life, force, Bleed); 
 
         anim.SetTrigger("shoot");
         elapsed = 0;

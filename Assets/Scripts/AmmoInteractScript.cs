@@ -40,11 +40,11 @@ public class AmmoInteractScript : MonoBehaviour
             OnEnterZone.Invoke();
         }
     }
-    
+
     //Hides text if player left interacitve zone
     void ExitInteractiveZone(Collider other)
     {
-        if(other.gameObject == player.gameObject)
+        if (other.gameObject == player.gameObject)
         {
             //Hide the prompt if false
             interactiveText.enabled = false;
@@ -55,7 +55,7 @@ public class AmmoInteractScript : MonoBehaviour
     private void Update()
     {
         //Check if they player is in the zone and pressed the button
-        if(isInZone && Input.GetButtonDown("Interact"))
+        if (isInZone && Input.GetButtonDown("Interact"))
         {
             OnEPress.Invoke();
         }

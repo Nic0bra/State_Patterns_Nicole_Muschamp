@@ -14,7 +14,7 @@ public class Damageable : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Initialize();   
+        Initialize();
     }
 
     public void Initialize()

@@ -1,10 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 // gun base class
 public class Gun : MonoBehaviour
 {
+    //Event for ammo change
+    public UnityEvent<int> OnAmmoChanged = new UnityEvent<int>();
+
+    //Event for fire gun camera shake
+    public UnityEvent OnFire = new UnityEvent();
+
     protected FPSController player;
 
     // references
@@ -25,6 +32,7 @@ public class Gun : MonoBehaviour
     void Start()
     {
         ammo = maxAmmo;
+        OnAmmoChanged?.Invoke(ammo);
     }
 
     // Update is called once per frame
@@ -32,11 +40,11 @@ public class Gun : MonoBehaviour
     {
         elapsed += Time.deltaTime;
 
-        // cheat code to refill ammo
+        /* cheat code to refill ammo
         if (Input.GetKeyDown(KeyCode.R))
         {
             AddAmmo(999);
-        }
+        }*/
     }
 
     public virtual void Equip(FPSController p)
@@ -61,10 +69,19 @@ public class Gun : MonoBehaviour
             return false;
         }
 
-        if(elapsed < timeBetweenShots)
+        if (elapsed < timeBetweenShots)
         {
             return false;
         }
+
+        Debug.Log("Bang");
+        Instantiate(bulletPrefab, gunBarrelEnd.transform.position, gunBarrelEnd.rotation);
+        anim.SetTrigger("shoot");
+        timeBetweenShots = 0;
+        ammo -= 1;
+        OnAmmoChanged.Invoke(ammo);
+        OnFire.Invoke();
+
 
         return true;
     }
@@ -77,8 +94,7 @@ public class Gun : MonoBehaviour
     public virtual void AddAmmo(int amount)
     {
         ammo += amount;
-
-        if (ammo > maxAmmo)
-            ammo = maxAmmo;
+        ammo = Mathf.Clamp(ammo, 0, maxAmmo);
+        OnAmmoChanged?.Invoke(ammo);
     }
 }
