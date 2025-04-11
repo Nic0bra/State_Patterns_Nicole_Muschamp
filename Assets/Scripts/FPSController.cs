@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 using static UnityEngine.UI.Image;
 
 public class FPSController : MonoBehaviour
@@ -30,6 +31,12 @@ public class FPSController : MonoBehaviour
     int gunIndex = 0;
     Gun currentGun = null;
 
+    //Input systems
+    Vector2 moveInput;
+    bool jump = false;
+    bool sprint = false;
+    Vector2 lookInput;
+
     // properties
     public GameObject Cam { get { return cam; } }
 
@@ -57,8 +64,6 @@ public class FPSController : MonoBehaviour
     {
         Movement();
         Look();
-        HandleSwitchGun();
-        FireGun();
 
         // always go back to "no velocity"
         // "velocity" is for movement speed that we gain in addition to our movement (falling, knockback, etc.)
@@ -75,13 +80,14 @@ public class FPSController : MonoBehaviour
             velocity.y = -1;// -0.5f;
         }
 
-        Vector2 movement = GetPlayerMovementVector();
-        Vector3 move = transform.right * movement.x + transform.forward * movement.y;
+
+        Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
         controller.Move(move * movementSpeed * (GetSprint() ? 2 : 1) * Time.deltaTime);
 
-        if (Input.GetButtonDown("Jump") && grounded)
+        if (jump && grounded)
         {
             velocity.y += Mathf.Sqrt(jumpForce * -1 * gravity);
+            jump = false;
         }
 
         velocity.y += gravity * Time.deltaTime;
@@ -89,11 +95,22 @@ public class FPSController : MonoBehaviour
         controller.Move(velocity * Time.deltaTime);
     }
 
+    void OnJump()
+    {
+        Debug.Log("Player jumped");
+        if (grounded)
+            jump = true;
+    }
+    void OnMove(InputValue move)
+    {
+        Debug.Log("Player moved");
+        moveInput = move.Get<Vector2>();
+    }
+
     void Look()
     {
-        Vector2 looking = GetPlayerLook();
-        float lookX = looking.x * lookSensitivityX * Time.deltaTime;
-        float lookY = looking.y * lookSensitivityY * Time.deltaTime;
+        float lookX = lookInput.x * lookSensitivityX * Time.deltaTime;
+        float lookY = lookInput.y * lookSensitivityY * Time.deltaTime;
 
         xRotation -= lookY;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
@@ -103,12 +120,18 @@ public class FPSController : MonoBehaviour
         transform.Rotate(Vector3.up * lookX);
     }
 
-    void HandleSwitchGun()
+    public void OnLook(InputValue mouseLook)
     {
+        Debug.Log("Player looked");
+        lookInput = mouseLook.Get<Vector2>();
+    }
+    void OnChangeGun(InputValue wheel)
+    {
+        Debug.Log("Player changed gun");
         if (equippedGuns.Count == 0)
             return;
 
-        if (Input.GetAxis("Mouse ScrollWheel") > 0)
+        if (wheel.Get<float>() > 0)
         {
             gunIndex++;
             if (gunIndex > equippedGuns.Count - 1)
@@ -117,7 +140,7 @@ public class FPSController : MonoBehaviour
             EquipGun(equippedGuns[gunIndex]);
         }
 
-        else if (Input.GetAxis("Mouse ScrollWheel") < 0)
+        else if (wheel.Get<float>() < 0)
         {
             gunIndex--;
             if (gunIndex < 0)
@@ -127,7 +150,7 @@ public class FPSController : MonoBehaviour
         }
     }
 
-    void FireGun()
+    /*void FireGun()
     {
         // don't fire if we don't have a gun
         if (currentGun == null)
@@ -151,6 +174,15 @@ public class FPSController : MonoBehaviour
         {
             currentGun?.AttemptAltFire();
         }
+    }*/
+
+    void OnShoot()
+    {
+        Debug.Log("Player shot");
+        if (currentGun == null)
+            return;
+
+        currentGun?.AttemptFire();
     }
 
     void EquipGun(Gun g)
@@ -194,7 +226,7 @@ public class FPSController : MonoBehaviour
 
     // Input methods
 
-    bool GetPressFire()
+    /*bool GetPressFire()
     {
         return Input.GetButtonDown("Fire1");
     }
@@ -217,11 +249,15 @@ public class FPSController : MonoBehaviour
     Vector2 GetPlayerLook()
     {
         return new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+    }*/
+    void OnSprint(InputValue shift)
+    {
+        Debug.Log("Player sprinted");
+        sprint = shift.isPressed;
     }
-
     bool GetSprint()
     {
-        return Input.GetButton("Sprint");
+        return sprint;
     }
     
 

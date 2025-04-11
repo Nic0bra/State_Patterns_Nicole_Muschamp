@@ -32,11 +32,27 @@ public class Damageable : MonoBehaviour
     public void TakeDamage(float amount)
     {
         currentHp -= amount;
+        currentHp = Mathf.Clamp(currentHp, 0, maxHp);
+
+        if(damageNumberPrefab != null)
+        {
+            var damageNumber = Instantiate(damageNumberPrefab,transform.position, Quaternion.identity);
+
+            DamageNumber dn = damageNumber.GetComponent<DamageNumber>();
+            if(dn != null)
+            {
+                dn.SetNumber(amount);
+            }
+        }
 
         if (currentHp < 0)
-            currentHp = 0;
+        {
+            Enemy enemy = GetComponent<Enemy>();
+            if (enemy != null)
+            {
+                enemy.Respawn();
+            }
 
-        var damageNumber = Instantiate(damageNumberPrefab, transform.position, Quaternion.identity);
-        damageNumber.GetComponent<DamageNumber>().SetNumber(amount);
+        }
     }
 }
